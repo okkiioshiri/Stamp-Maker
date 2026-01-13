@@ -109,14 +109,17 @@
         z-index: 15; pointer-events: none;
     }
 
-    /* 画像リスト */
+    /* 画像リスト (修正箇所: 背景色と枠線を追加) */
     #imageListContainer {
         display: flex;
         gap: 8px;
         overflow-x: auto;
-        padding-bottom: 10px;
+        padding: 8px;
         min-height: 60px;
         align-items: center;
+        background-color: #050505; /* 背景を黒く */
+        border: 1px solid #27272a; /* 枠線を追加 */
+        border-radius: 6px;
     }
     .sortable-item {
         width: 40px; height: 40px; flex-shrink: 0; border-radius: 6px;
@@ -169,6 +172,9 @@
     
     .toggle-checkbox:checked { right: 0; border-color: #9146FF; }
     .toggle-checkbox:checked + .toggle-label { background-color: #9146FF; }
+    
+    .toggle-checkbox:disabled + .toggle-label { background-color: #333; opacity: 0.5; cursor: not-allowed; }
+    .toggle-checkbox:disabled { cursor: not-allowed; border-color: #444; }
 </style>
 </head>
 <body class="flex flex-col h-screen bg-[#09090b]">
@@ -229,12 +235,37 @@
                     
                     <!-- Col 1: Output Settings -->
                     <div class="flex-1 flex flex-col gap-2">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                            <span class="text-xs font-bold text-gray-400">OUTPUT SETTINGS</span>
+                        <div class="flex items-center justify-between mb-0.5">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                <span class="text-xs font-bold text-gray-400">OUTPUT</span>
+                            </div>
+                            <!-- Twitch Mode Toggle -->
+                            <div class="flex items-center gap-1.5 bg-[#0e0e10] px-2 py-0.5 rounded border border-[#333]" title="Limit settings for Twitch emotes">
+                                <span class="text-[9px] font-bold text-[#9146FF]">Twitch</span>
+                                <div class="relative w-6 h-3">
+                                    <input type="checkbox" id="twitchModeToggle" checked class="toggle-checkbox absolute block w-3 h-3 rounded-full bg-white border-2 appearance-none cursor-pointer border-[#333] right-3 transition-all duration-200"/>
+                                    <label for="twitchModeToggle" class="toggle-label block overflow-hidden h-3 rounded-full bg-[#333] cursor-pointer"></label>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="bg-[#1f1f23] p-2.5 rounded-xl border border-[#2f2f35] shadow-sm space-y-2">
+                            
+                            <!-- Size Settings -->
+                            <div class="flex items-center gap-2 border-b border-[#2f2f35] pb-2 mb-1">
+                                <div class="w-14 shrink-0">
+                                    <label class="text-[9px] font-bold text-gray-500 block mb-0.5">SIZE (px)</label>
+                                    <input type="number" id="sizeInput" value="112" step="1" min="16" max="112" class="w-full bg-[#0e0e10] border border-[#333] text-gray-200 text-xs rounded text-center py-1">
+                                </div>
+                                <div class="flex-1 flex items-end h-full pb-1">
+                                    <label class="flex items-center gap-1.5 cursor-pointer select-none opacity-50" id="originalSizeLabel">
+                                        <input type="checkbox" id="originalSizeToggle" disabled class="rounded bg-[#0e0e10] border-[#333] text-[#9146FF] focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                                        <span class="text-[9px] font-bold text-gray-400">Original Res</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- FPS & Preset -->
                             <div class="flex items-center gap-2">
                                 <div class="w-14 shrink-0">
@@ -287,11 +318,21 @@
                         </div>
                     </div>
 
-                    <!-- Col 2: Image Adjustment (Zoom Removed) -->
+                    <!-- Col 2: Image Adjustment -->
                     <div class="flex-1 flex flex-col gap-2">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                            <span class="text-xs font-bold text-gray-400">ADJUSTMENT</span>
+                        <div class="flex items-center justify-between mb-0.5">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                <span class="text-xs font-bold text-gray-400">ADJUSTMENT</span>
+                            </div>
+                            <!-- Free Aspect Toggle -->
+                            <div class="flex items-center gap-1.5" title="Allow non-square crop">
+                                <span class="text-[9px] font-bold text-gray-500">Free Aspect</span>
+                                <div class="relative w-6 h-3">
+                                    <input type="checkbox" id="freeAspectToggle" disabled class="toggle-checkbox absolute block w-3 h-3 rounded-full bg-white border-2 appearance-none cursor-pointer border-[#333] right-3 transition-all duration-200"/>
+                                    <label for="freeAspectToggle" class="toggle-label block overflow-hidden h-3 rounded-full bg-[#333] cursor-pointer"></label>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="bg-[#1f1f23] p-2.5 rounded-xl border border-[#2f2f35] shadow-sm space-y-1.5">
@@ -422,6 +463,13 @@
         extendFramesContainer: document.getElementById('extendFramesContainer'),
         extendFramesToggle: document.getElementById('extendFramesToggle'),
         
+        // New Controls
+        twitchModeToggle: document.getElementById('twitchModeToggle'),
+        sizeInput: document.getElementById('sizeInput'),
+        originalSizeToggle: document.getElementById('originalSizeToggle'),
+        originalSizeLabel: document.getElementById('originalSizeLabel'),
+        freeAspectToggle: document.getElementById('freeAspectToggle'),
+        
         fpsInput: document.getElementById('fpsInput'),
         fpsSelect: document.getElementById('fpsSelect'),
         durationInput: document.getElementById('durationInput'),
@@ -443,11 +491,11 @@
         previewLoading: document.getElementById('previewLoading')
     };
 
-    const CONFIG = { MAX_FRAMES: 60, CROP_SIZE: 300, OUTPUT_SIZE: 112 };
+    const CONFIG = { MAX_FRAMES: 60, DEFAULT_CROP_SIZE: 300 };
     
     let state = {
         mode: 'video', fps: 30, maxDuration: 1.0,
-        scale: 1, posX: 0, posY: 0,
+        cropW: 300, cropH: 300, posX: 0, posY: 0,
         videoDuration: 0, startTime: 0, endTime: 1.0,
         mediaWidth: 0, mediaHeight: 0,
         images: [],
@@ -456,7 +504,12 @@
         filters: { brightness: 100, contrast: 100, saturate: 100 },
         isDraggingNav: false, isResizingNav: false, isDraggingTimeline: false,
         dragStart: { x:0, y:0, posX:0, posY:0, width:0, scale:0, startPct:0, endPct:0 },
-        isPlayingLoop: false, animationFrameId: null, loopStartTime: null
+        isPlayingLoop: false, animationFrameId: null, loopStartTime: null,
+        
+        // New States
+        twitchMode: true,
+        useOriginalSize: false,
+        freeAspect: false
     };
 
     // --- Event Listeners ---
@@ -497,6 +550,109 @@
         updateConfig('frames');
     });
 
+    // Twitch Mode: Input Enforcement (Force Limit)
+    els.sizeInput.addEventListener('input', function() {
+        if (state.twitchMode) {
+            const val = parseInt(this.value);
+            if (val > 112) this.value = 112;
+        }
+    });
+
+    els.fpsInput.addEventListener('input', function() {
+        if (state.twitchMode) {
+            const val = parseFloat(this.value);
+            if (val > 60) this.value = 60;
+        }
+    });
+
+    // New: Frames Input Enforcement
+    els.framesInput.addEventListener('input', function() {
+        if (state.twitchMode) {
+            const val = parseInt(this.value);
+            if (val > 60) this.value = 60;
+        }
+    });
+
+    // Twitch Mode Toggle
+    els.twitchModeToggle.addEventListener('change', e => {
+        state.twitchMode = e.target.checked;
+        updateTwitchModeUI();
+        // Force square if Twitch mode enabled
+        if(state.twitchMode) {
+            state.freeAspect = false;
+            els.freeAspectToggle.checked = false;
+            // Reset crop to square
+            const size = Math.min(state.cropW, state.cropH);
+            state.cropW = size; state.cropH = size;
+            updateNavBox();
+        }
+    });
+
+    // Original Size Toggle
+    els.originalSizeToggle.addEventListener('change', e => {
+        state.useOriginalSize = e.target.checked;
+        if (state.useOriginalSize) {
+            els.sizeInput.disabled = true;
+            els.sizeInput.classList.add('opacity-50');
+        } else {
+            els.sizeInput.disabled = false;
+            els.sizeInput.classList.remove('opacity-50');
+        }
+    });
+
+    // Free Aspect Toggle
+    els.freeAspectToggle.addEventListener('change', e => {
+        state.freeAspect = e.target.checked;
+        if(!state.freeAspect) {
+            // Reset to square
+            const size = Math.min(state.cropW, state.cropH);
+            state.cropW = size; state.cropH = size;
+            updateNavBox();
+        }
+    });
+
+    function updateTwitchModeUI() {
+        if (state.twitchMode) {
+            // Twitch Mode ON
+            els.sizeInput.max = 112;
+            if (parseInt(els.sizeInput.value) > 112) els.sizeInput.value = 112;
+            
+            state.useOriginalSize = false;
+            els.originalSizeToggle.checked = false;
+            els.originalSizeToggle.disabled = true;
+            els.originalSizeLabel.classList.add('opacity-50');
+            
+            els.freeAspectToggle.disabled = true;
+            els.freeAspectToggle.checked = false;
+            
+            els.sizeInput.disabled = false;
+            els.sizeInput.classList.remove('opacity-50');
+            
+            els.fpsInput.max = 60;
+            if (parseFloat(els.fpsInput.value) > 60) {
+                els.fpsInput.value = 60;
+                updateConfig('fps');
+            }
+            
+            // Frames Limit
+            els.framesInput.max = 60;
+            if (parseInt(els.framesInput.value) > 60) {
+                els.framesInput.value = 60;
+                updateConfig('frames');
+            }
+        } else {
+            // Twitch Mode OFF
+            els.sizeInput.removeAttribute('max');
+            els.originalSizeToggle.disabled = false;
+            els.originalSizeLabel.classList.remove('opacity-50');
+            els.freeAspectToggle.disabled = false;
+            els.fpsInput.removeAttribute('max');
+            els.framesInput.removeAttribute('max');
+        }
+    }
+    // Init UI
+    updateTwitchModeUI();
+
     function handleFiles(files) {
         if(!files || !files.length) return;
         const isVideo = files[0].type.startsWith('video');
@@ -521,7 +677,6 @@
             els.videoTimelineArea.style.display = 'block'; els.imageListArea.style.display = 'none';
             els.extendFramesContainer.style.display = 'none'; els.modeBadge.innerText = "VIDEO MODE";
             
-            // Default 30FPS, 1.0s
             state.fps = 30; 
             state.startTime = 0; 
             state.endTime = Math.min(state.videoDuration, 1.0);
@@ -689,6 +844,17 @@
             }
         }
 
+        // Twitch Mode Limit Check
+        if (state.twitchMode && frames > 60) {
+            frames = 60;
+            // Recalculate duration based on limit
+            duration = frames / fps;
+            if (state.mode === 'video') {
+                state.endTime = state.startTime + duration;
+                updateTimelineUI();
+            }
+        }
+
         state.fps = fps;
         state.totalFrames = frames;
         
@@ -726,26 +892,22 @@
 
     function autoMaximizeCrop() {
         if (!state.mediaWidth) return;
-        let cropSize = Math.min(state.mediaWidth, state.mediaHeight);
-        state.scale = CONFIG.CROP_SIZE / cropSize;
-        state.posX = (state.mediaWidth - cropSize) / 2;
-        state.posY = (state.mediaHeight - cropSize) / 2;
+        let size = Math.min(state.mediaWidth, state.mediaHeight);
+        state.cropW = size;
+        state.cropH = size;
+        state.posX = (state.mediaWidth - size) / 2;
+        state.posY = (state.mediaHeight - size) / 2;
         updateNavBox(); updateFilterPreview();
     }
 
     // --- Navigator Drag & Resize ---
     function clampPos() {
         if(!state.mediaWidth) return;
-        const cropSize = CONFIG.CROP_SIZE / state.scale;
-        const maxX = state.mediaWidth - cropSize;
-        const maxY = state.mediaHeight - cropSize;
+        const maxX = state.mediaWidth - state.cropW;
+        const maxY = state.mediaHeight - state.cropH;
         
         state.posX = Math.max(0, Math.min(state.posX, maxX));
         state.posY = Math.max(0, Math.min(state.posY, maxY));
-        
-        // If crop is larger than media (shouldn't happen with clamp logic but safe to have)
-        if (cropSize > state.mediaWidth) state.posX = (state.mediaWidth - cropSize) / 2;
-        if (cropSize > state.mediaHeight) state.posY = (state.mediaHeight - cropSize) / 2;
     }
 
     els.navContainer.addEventListener('mousedown', e => {
@@ -780,7 +942,6 @@
             const newBoxLeft = e.clientX - containerRect.left - state.dragStart.offsetX;
             const newBoxTop = e.clientY - containerRect.top - state.dragStart.offsetY;
             
-            // Convert screen px to image px
             state.posX = newBoxLeft / ratioX;
             state.posY = newBoxTop / ratioY;
             
@@ -790,22 +951,40 @@
         if (state.isResizingNav) {
             e.preventDefault();
             const mouseX = e.clientX - containerRect.left;
+            const mouseY = e.clientY - containerRect.top;
             
-            // Calculate new width in screen pixels
+            // Calculate new size in screen pixels
             let newBoxW = mouseX - state.dragStart.boxLeft;
-            newBoxW = Math.max(20, newBoxW); // Min size
+            let newBoxH = mouseY - state.dragStart.boxTop;
+            
+            newBoxW = Math.max(20, newBoxW);
+            newBoxH = Math.max(20, newBoxH);
             
             // Convert to image pixels
-            let newCropSize = newBoxW / ratioX;
+            let newCropW = newBoxW / ratioX;
+            let newCropH = newBoxH / ratioY;
+            
+            // Aspect Ratio Logic
+            if (!state.freeAspect) {
+                // Force Square (use larger dimension or X)
+                const size = Math.max(newCropW, newCropH);
+                newCropW = size;
+                newCropH = size;
+            }
             
             // Limit max size to image boundary
-            const maxCropSize = state.mediaWidth - state.posX;
-            newCropSize = Math.min(newCropSize, maxCropSize);
+            newCropW = Math.min(newCropW, state.mediaWidth - state.posX);
+            newCropH = Math.min(newCropH, state.mediaHeight - state.posY);
             
-            // Update scale
-            state.scale = CONFIG.CROP_SIZE / newCropSize;
+            if (!state.freeAspect) {
+                // Re-clamp for square if hit boundary
+                const size = Math.min(newCropW, newCropH);
+                newCropW = size; newCropH = size;
+            }
             
-            // No need to update posX/Y for bottom-right resize
+            state.cropW = newCropW;
+            state.cropH = newCropH;
+            
             updateNavBox(); updateFilterPreview();
         }
     });
@@ -816,12 +995,10 @@
         if(!navW) return;
         const ratioX = navW / state.mediaWidth; const ratioY = navH / state.mediaHeight;
         
-        const cropSize = CONFIG.CROP_SIZE / state.scale;
-        
         const boxLeft = state.posX * ratioX;
         const boxTop = state.posY * ratioY;
-        const boxW = cropSize * ratioX;
-        const boxH = cropSize * ratioY;
+        const boxW = state.cropW * ratioX;
+        const boxH = state.cropH * ratioY;
         
         els.navBox.style.left = `${boxLeft}px`; els.navBox.style.top = `${boxTop}px`;
         els.navBox.style.width = `${boxW}px`; els.navBox.style.height = `${boxH}px`;
@@ -907,6 +1084,37 @@
         els.timeDisplay.innerText = `${state.startTime.toFixed(1)}s - ${state.endTime.toFixed(1)}s`;
     }
 
+    // Output Size Helper
+    function getOutputDimensions() {
+        if (state.useOriginalSize && !state.twitchMode) {
+            return { width: Math.round(state.cropW), height: Math.round(state.cropH) };
+        }
+        
+        // User input size (treated as max dimension or width)
+        let inputSize = parseInt(els.sizeInput.value) || 112;
+        if (state.twitchMode && inputSize > 112) inputSize = 112;
+        
+        if (state.twitchMode || !state.freeAspect) {
+            // Square
+            return { width: inputSize, height: inputSize };
+        } else {
+            // Free Aspect: Maintain ratio based on inputSize as the larger dimension
+            const ratio = state.cropW / state.cropH;
+            let w, h;
+            if (ratio >= 1) {
+                // Landscape
+                w = inputSize;
+                h = Math.round(inputSize / ratio);
+            } else {
+                // Portrait
+                w = Math.round(inputSize * ratio);
+                h = inputSize;
+            }
+            // Ensure at least 1px
+            return { width: Math.max(1, w), height: Math.max(1, h) };
+        }
+    }
+
     // Preview
     els.qualitySelect.addEventListener('change', previewQuality);
     async function previewQuality() {
@@ -917,39 +1125,30 @@
 
         try {
             const quality = parseInt(els.qualitySelect.value);
-            const blob = await generateSingleFrameGif(quality);
-            els.qualityPreviewImage.src = URL.createObjectURL(blob);
-            els.previewLoading.style.display = 'none'; els.qualityPreviewImage.style.display = 'block';
-            showToast(`Preview: Quality ${quality}`);
-        } catch(e) { els.previewLoading.style.display = 'none'; }
-    }
-    function clearQualityPreview() { els.qualityPreviewImage.style.display = 'none'; }
-    els.navContainer.addEventListener('mousedown', clearQualityPreview);
-
-    function generateSingleFrameGif(quality) {
-        return new Promise(resolve => {
-            const size = CONFIG.OUTPUT_SIZE;
-            const gif = new GIF({ workers: 4, quality: quality, width: size, height: size, workerScript: workerBlobURL, dither: false });
-            const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+            const dims = getOutputDimensions();
+            
+            const gif = new GIF({ workers: 4, quality: quality, width: dims.width, height: dims.height, workerScript: workerBlobURL, dither: false });
+            const canvas = document.createElement('canvas'); canvas.width = dims.width; canvas.height = dims.height;
             const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.filter = `brightness(${state.filters.brightness}%) contrast(${state.filters.contrast}%) saturate(${state.filters.saturate}%)`;
             
-            const cropSize = CONFIG.CROP_SIZE / state.scale;
             const sx = state.posX;
             const sy = state.posY;
-            const sw = cropSize;
-            const sh = cropSize;
+            const sw = state.cropW;
+            const sh = state.cropH;
             
-            ctx.fillStyle = '#000'; ctx.fillRect(0,0, size, size);
-            if(state.mode === 'video') ctx.drawImage(els.sourceVideo, sx, sy, sw, sh, 0, 0, size, size);
-            else ctx.drawImage(els.sourceImage, sx, sy, sw, sh, 0, 0, size, size);
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0, dims.width, dims.height);
+            if(state.mode === 'video') ctx.drawImage(els.sourceVideo, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
+            else ctx.drawImage(els.sourceImage, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
             
             gif.addFrame(ctx, { copy: true });
             gif.on('finished', blob => resolve(blob));
             gif.render();
-        });
+        } catch(e) { els.previewLoading.style.display = 'none'; }
     }
+    function clearQualityPreview() { els.qualityPreviewImage.style.display = 'none'; }
+    els.navContainer.addEventListener('mousedown', clearQualityPreview);
 
     // Play Loop
     els.playLoopBtn.addEventListener('click', togglePlayLoop);
@@ -1009,17 +1208,18 @@
 
         try {
             const quality = parseInt(els.qualitySelect.value);
-            const gif = new GIF({ workers: 4, quality: quality, width: CONFIG.OUTPUT_SIZE, height: CONFIG.OUTPUT_SIZE, workerScript: workerBlobURL });
-            const canvas = document.createElement('canvas'); canvas.width = CONFIG.OUTPUT_SIZE; canvas.height = CONFIG.OUTPUT_SIZE;
+            const dims = getOutputDimensions();
+            
+            const gif = new GIF({ workers: 4, quality: quality, width: dims.width, height: dims.height, workerScript: workerBlobURL });
+            const canvas = document.createElement('canvas'); canvas.width = dims.width; canvas.height = dims.height;
             const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.filter = `brightness(${state.filters.brightness}%) contrast(${state.filters.contrast}%) saturate(${state.filters.saturate}%)`;
             
-            const cropSize = CONFIG.CROP_SIZE / state.scale;
             const sx = state.posX;
             const sy = state.posY;
-            const sw = cropSize;
-            const sh = cropSize;
+            const sw = state.cropW;
+            const sh = state.cropH;
             
             if(state.mode === 'video') {
                 const step = 1 / state.fps; const duration = state.endTime - state.startTime;
@@ -1029,8 +1229,8 @@
                     if(t >= state.endTime || frameCount >= state.totalFrames) { gif.render(); return; }
                     els.sourceVideo.currentTime = t;
                     await new Promise(r => { const h=()=>{els.sourceVideo.removeEventListener('seeked',h);r()}; els.sourceVideo.addEventListener('seeked',h); });
-                    ctx.fillStyle = '#000'; ctx.fillRect(0,0, CONFIG.OUTPUT_SIZE, CONFIG.OUTPUT_SIZE);
-                    ctx.drawImage(els.sourceVideo, sx, sy, sw, sh, 0, 0, CONFIG.OUTPUT_SIZE, CONFIG.OUTPUT_SIZE);
+                    ctx.fillStyle = '#000'; ctx.fillRect(0,0, dims.width, dims.height);
+                    ctx.drawImage(els.sourceVideo, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
                     gif.addFrame(ctx, { copy: true, delay: step * 1000 });
                     els.progressBar.style.width = ((t-state.startTime)/duration*100)+'%';
                     t += step; frameCount++; setTimeout(process, 0);
@@ -1044,8 +1244,8 @@
                     idx = Math.min(idx, state.images.length-1);
                     const img = new Image(); img.src = state.images[idx].url;
                     await new Promise(r => img.onload = r);
-                    ctx.fillStyle = '#000'; ctx.fillRect(0,0, CONFIG.OUTPUT_SIZE, CONFIG.OUTPUT_SIZE);
-                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, CONFIG.OUTPUT_SIZE, CONFIG.OUTPUT_SIZE);
+                    ctx.fillStyle = '#000'; ctx.fillRect(0,0, dims.width, dims.height);
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
                     gif.addFrame(ctx, { copy: true, delay: delay });
                     els.progressBar.style.width = ((i/total)*100)+'%';
                 }
@@ -1061,13 +1261,13 @@
                 
                 const div = document.createElement('div');
                 div.className = "flex items-center gap-3 bg-[#1f1f23] p-2 rounded-lg border border-[#333] mb-2";
-                div.innerHTML = `<img src="${url}" class="w-10 h-10 rounded"><div class="flex-1 min-w-0"><div class="text-xs font-bold text-white">Stamp</div><div class="text-[10px] ${sizeClass}">${sizeText}</div></div><a href="${url}" download="stamp.gif" class="text-xs ${btnClass} px-2 py-1 rounded text-white text-center min-w-[50px]">${btnText}</a>`;
+                div.innerHTML = `<img src="${url}" class="w-10 h-10 rounded"><div class="flex-1 min-w-0"><div class="text-xs font-bold text-white">Stamp (${dims.width}x${dims.height})</div><div class="text-[10px] ${sizeClass}">${sizeText}</div></div><a href="${url}" download="stamp.gif" class="text-xs ${btnClass} px-2 py-1 rounded text-white text-center min-w-[50px]">${btnText}</a>`;
                 els.resultList.insertBefore(div, els.resultList.firstChild);
                 els.generateBtn.disabled = false; els.progressContainer.classList.add('hidden');
                 if(isOverSize) showToast("Warning: File size > 1MB");
                 else showToast("Generated!");
             });
-        } catch(e) { els.generateBtn.disabled = false; }
+        } catch(e) { els.generateBtn.disabled = false; console.error(e); }
     });
 
     function showToast(msg) {
