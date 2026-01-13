@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Twitch Stamp Maker Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+        --twitch-purple: #9146FF;
+        --twitch-bg: #0e0e10;
+        --panel-bg: #18181b;
+        --border-color: #2f2f35;
+    }
+    body {
+        background-color: var(--twitch-bg);
+        color: #efeff1;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* クロップエリア */
+    .crop-wrapper {
+        width: 300px;
+        height: 300px;
+        border: 2px solid var(--twitch-purple);
+        position: relative;
+        overflow: hidden;
+        background: #000;
+        cursor: grab;
+        margin: 0 auto;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6);
+        transition: border-color 0.2s;
+    }
+    .crop-wrapper:active { cursor: grabbing; border-color: #bf94ff; }
+    
+    #sourceVideo {
+        position: absolute; transform-origin: top left; max-width: none; pointer-events: none; will-change: transform;
+    }
+    
+    .crop-overlay {
+        position: absolute; inset: 0;
+        border: 1px dashed rgba(255,255,255,0.3);
+        pointer-events: none; z-index: 10;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .crop-overlay::after {
+        content: ''; width: 20px; height: 2px; background: rgba(255,255,255,0.4); position: absolute;
+    }
+    .crop-overlay::before {
+        content: ''; width: 2px; height: 20px; background: rgba(255,255,255,0.4); position: absolute;
+    }
+
+    /* ナビゲーター */
+    .nav-wrapper {
+        width: 100%; background: #000; border: 1px solid var(--border-color);
+        border-radius: 8px; display: flex; justify-content: center; padding: 0;
+        position: relative; overflow: hidden;
+    }
+    .nav-container { 
+        position: relative; width: 100%; cursor: grab;
+    }
+    .nav-container:active { cursor: grabbing; }
+
+    #navVideo { 
+        width: 100%; height: auto; display: block; opacity: 0.6; pointer-events: none;
+    }
+    #navBox {
+        position: absolute; border: 2px solid #ff4444; background: rgba(255, 68, 68, 0.15);
+        pointer-events: none; z-index: 10; box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+    }
+
+    /* タイムライン */
+    .timeline-container {
+        position: relative; height: 44px; background: #121214;
+        border-radius: 6px; margin-top: 8px; cursor: pointer; user-select: none;
+        overflow: hidden; border: 1px solid var(--border-color);
+    }
+    .timeline-selection {
+        position: absolute; top: 0; bottom: 0; background: rgba(145, 70, 255, 0.25);
+        border-top: 2px solid var(--twitch-purple); border-bottom: 2px solid var(--twitch-purple);
+        cursor: grab;
+    }
+    .timeline-selection:active { cursor: grabbing; background: rgba(145, 70, 255, 0.35); }
+    
+    .timeline-handle {
+        position: absolute; top: 0; bottom: 0; width: 18px;
+        cursor: ew-resize; z-index: 20; display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s;
+    }
+    .timeline-handle:hover { background: rgba(255,255,255,0.1); }
+    .timeline-handle::after {
+        content: ''; height: 20px; width: 4px; background: var(--twitch-purple); border-radius: 2px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .handle-left { left: 0; transform: translateX(-100%); border-radius: 4px 0 0 4px; border-right: none; }
+    .handle-right { right: 0; transform: translateX(100%); border-radius: 0 4px 4px 0; border-left: none; }
+    
+    .playhead {
+        position: absolute; top: 0; bottom: 0; width: 2px; background: #ff4444;
+        z-index: 15; pointer-events: none; box-shadow: 0 0 4px rgba(255, 68, 68, 0.5);
+    }
+
+    /* トースト */
+    .toast {
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+        background: #1f1f23; color: #fff; padding: 12px 24px; border-radius: 8px;
+        opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 9999; font-weight: 500; border: 1px solid #444;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    select {
+        appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;
+    }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-6 bg-[#09090b]">
+
+    <div class="w-full max-w-[1200px] bg-[#18181b] rounded-2xl shadow-2xl overflow-hidden border border-[#27272a] flex flex-col h-[90vh] min-h-[600px] md:h-auto">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-[#27272a] flex justify-between items-center bg-[#1f1f23] shrink-0">
+            <h1 class="text-lg font-bold flex items-center gap-2 tracking-tight">
+                <svg class="w-6 h-6 text-[#9146FF]" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                <span class="text-gray-100">Stamp Maker</span>
+                <span class="text-[10px] bg-[#2d2d31] text-gray-400 px-2 py-0.5 rounded-full border border-[#3f3f46] ml-1">PRO</span>
+            </h1>
+            <div class="flex items-center gap-3">
+                <div class="text-[10px] font-mono text-gray-500 bg-[#121214] px-2 py-1 rounded border border-[#27272a]">
+                    MAX 60 FRAMES
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
+            
+            <!-- Main Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative bg-[#0e0e10]">
+                <div class="p-6 md:p-8 flex flex-col items-center gap-8 min-h-full">
+                
+                    <!-- 1. Upload View -->
+                    <div id="uploadArea" class="w-full h-full flex flex-col items-center justify-center py-10 relative z-10">
+                        <label id="dropZone" class="w-full max-w-lg min-h-[400px] border-2 border-dashed border-[#3f3f46] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#27272a] hover:border-[#9146FF] transition-all group relative overflow-hidden shadow-xl bg-[#18181b]">
+                            
+                            <!-- inputは隠すが機能させる -->
+                            <input type="file" id="videoInput" accept="video/*" class="sr-only">
+                            
+                            <!-- pointer-events-none を追加してドラッグイベントがlabelで発火するようにする -->
+                            <div class="p-5 rounded-full bg-[#1f1f23] mb-6 group-hover:scale-110 transition duration-300 shadow-lg border border-[#2f2f35] relative z-0 pointer-events-none">
+                                <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            </div>
+                            <div class="font-bold text-2xl text-gray-200 relative z-0 pointer-events-none">Drag & Drop Video</div>
+                            <div class="text-sm text-gray-500 mt-2 font-medium relative z-0 pointer-events-none">MP4, WEBM, MOV</div>
+                        </label>
+                    </div>
+
+                    <!-- 2. Editor View -->
+                    <div id="editorArea" class="hidden w-full max-w-5xl flex-col gap-8 pb-12 relative z-20">
+                        
+                        <!-- Top: Navigator -->
+                        <div class="w-full">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">NAVIGATOR & PREVIEW</span>
+                            </div>
+                            <div class="nav-wrapper group bg-[#121214]">
+                                <div class="nav-container" id="navContainer">
+                                    <video id="navVideo" muted playsinline></video>
+                                    <div id="navBox"></div>
+                                </div>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1 text-right">Drag the red box to move view</div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                            
+                            <!-- Left: Cropper -->
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">CROP & ZOOM</span>
+                                </div>
+
+                                <div class="crop-wrapper rounded-xl" id="cropContainer">
+                                    <video id="sourceVideo" muted playsinline></video>
+                                    <div class="crop-overlay"></div>
+                                </div>
+                                
+                                <div class="bg-[#1f1f23] p-3 rounded-xl border border-[#2f2f35] flex items-center gap-3 shadow-sm select-none">
+                                    <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                    
+                                    <button id="zoomOutBtn" class="w-8 h-8 flex items-center justify-center rounded bg-[#27272a] hover:bg-[#3f3f46] text-gray-400 hover:text-white transition shadow-sm border border-[#3f3f46]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                                    </button>
+
+                                    <input type="range" id="scaleSlider" min="0.1" max="5" step="0.05" value="1" class="flex-1 h-1.5 bg-[#3f3f46] rounded-lg appearance-none cursor-pointer accent-[#9146FF]">
+                                    
+                                    <button id="zoomInBtn" class="w-8 h-8 flex items-center justify-center rounded bg-[#27272a] hover:bg-[#3f3f46] text-gray-400 hover:text-white transition shadow-sm border border-[#3f3f46]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    </button>
+
+                                    <span class="text-xs font-mono text-gray-400 w-10 text-right shrink-0" id="zoomValue">1.0x</span>
+                                </div>
+                            </div>
+
+                            <!-- Right: Timeline & Settings -->
+                            <div class="flex flex-col gap-4 h-full">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <svg class="w-4 h-4 text-[#9146FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">TIMELINE & OUTPUT</span>
+                                </div>
+
+                                <div class="bg-[#1f1f23] p-5 rounded-xl border border-[#2f2f35] flex-1 flex flex-col shadow-sm">
+                                    
+                                    <!-- Settings Grid -->
+                                    <div class="grid grid-cols-2 gap-4 mb-5">
+                                        <!-- FPS Setting -->
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-[10px] font-bold text-gray-500 uppercase">Smoothness (FPS)</label>
+                                            <div class="relative">
+                                                <select id="fpsSelect" class="w-full bg-[#121214] border border-[#3f3f46] text-gray-200 text-xs rounded-lg px-3 py-2.5 focus:border-[#9146FF] focus:outline-none transition-colors">
+                                                    <option value="60">60 FPS (1.0s)</option>
+                                                    <option value="30">30 FPS (2.0s)</option>
+                                                    <option value="20" selected>20 FPS (3.0s)</option>
+                                                    <option value="15">15 FPS (4.0s)</option>
+                                                    <option value="10">10 FPS (6.0s)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quality Setting (New) -->
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-[10px] font-bold text-gray-500 uppercase">GIF Quality</label>
+                                            <div class="relative">
+                                                <select id="qualitySelect" class="w-full bg-[#121214] border border-[#3f3f46] text-gray-200 text-xs rounded-lg px-3 py-2.5 focus:border-[#9146FF] focus:outline-none transition-colors">
+                                                    <option value="1" selected>Best (Slow)</option>
+                                                    <option value="10">Balanced</option>
+                                                    <option value="20">Fast (Low)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Timeline Info -->
+                                    <div class="flex justify-between items-end mb-2">
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] text-gray-500 font-bold uppercase mb-0.5">Range</span>
+                                            <span id="timeDisplay" class="text-white font-mono font-bold text-sm bg-[#121214] px-2 py-0.5 rounded border border-[#2f2f35]">0.0s - 3.0s</span>
+                                        </div>
+                                        <span class="text-[10px] text-[#9146FF] font-bold border border-[#9146FF] px-1.5 py-0.5 rounded" id="maxDurationDisplay">Max 3.0s</span>
+                                    </div>
+                                    
+                                    <!-- Timeline Slider -->
+                                    <div class="timeline-container mb-4" id="timeline">
+                                        <div id="playhead" class="playhead"></div>
+                                        <div id="timelineSelection" class="timeline-selection" style="left: 0%; width: 20%;">
+                                            <div class="timeline-handle handle-left" data-handle="left"></div>
+                                            <div class="timeline-handle handle-right" data-handle="right"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Preview Button -->
+                                    <button id="playLoopBtn" class="w-full py-2.5 bg-[#27272a] hover:bg-[#3f3f46] rounded-lg text-xs font-bold text-gray-300 transition-colors border border-[#3f3f46] flex items-center justify-center gap-2 mb-6 group">
+                                        <svg id="playIcon" class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                        PREVIEW LOOP
+                                    </button>
+
+                                    <div class="mt-auto">
+                                        <!-- Generate Button -->
+                                        <button id="generateBtn" class="w-full py-3.5 bg-[#9146FF] hover:bg-[#772ce8] text-white font-bold rounded-xl shadow-lg hover:shadow-purple-900/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2">
+                                            <span>CREATE STAMP</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        </button>
+                                        
+                                        <!-- Progress Bar -->
+                                        <div id="progressContainer" class="hidden mt-4">
+                                            <div class="flex justify-between text-[10px] text-gray-400 font-mono mb-1">
+                                                <span>RENDERING...</span>
+                                                <span id="progressPercent">0%</span>
+                                            </div>
+                                            <div class="w-full bg-[#27272a] rounded-full h-1.5 overflow-hidden">
+                                                <div id="progressBar" class="bg-[#9146FF] h-1.5 rounded-full transition-all duration-300 shadow-[0_0_10px_#9146FF]" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar (History) -->
+            <div class="w-full lg:w-80 bg-[#18181b] border-l border-[#27272a] flex flex-col h-72 lg:h-auto shrink-0 z-30">
+                <div class="p-4 border-b border-[#27272a] bg-[#1f1f23] flex justify-between items-center">
+                    <h2 class="font-bold text-xs text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        HISTORY
+                    </h2>
+                    <button class="text-[10px] text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1" onclick="document.getElementById('resultList').innerHTML=''">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        CLEAR
+                    </button>
+                </div>
+                <div id="resultList" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-[#121214]">
+                    <div class="flex flex-col items-center justify-center h-full opacity-20 gap-3">
+                        <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <div class="text-xs text-gray-500">No stamps created yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+<script>
+    // --- Init Worker ---
+    let workerBlobURL = '';
+    (async function initWorker() {
+        try {
+            const res = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+            const code = await res.text();
+            workerBlobURL = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+        } catch(e) { console.error(e); }
+    })();
+
+    // --- DOM Elements ---
+    const els = {
+        videoInput: document.getElementById('videoInput'),
+        dropZone: document.getElementById('dropZone'),
+        uploadArea: document.getElementById('uploadArea'),
+        editorArea: document.getElementById('editorArea'),
+        video: document.getElementById('sourceVideo'),
+        navVideo: document.getElementById('navVideo'),
+        cropContainer: document.getElementById('cropContainer'),
+        navContainer: document.getElementById('navContainer'),
+        navBox: document.getElementById('navBox'),
+        scaleSlider: document.getElementById('scaleSlider'),
+        zoomValue: document.getElementById('zoomValue'),
+        zoomInBtn: document.getElementById('zoomInBtn'),
+        zoomOutBtn: document.getElementById('zoomOutBtn'),
+        timeline: document.getElementById('timeline'),
+        selection: document.getElementById('timelineSelection'),
+        playhead: document.getElementById('playhead'),
+        timeDisplay: document.getElementById('timeDisplay'),
+        maxDurationDisplay: document.getElementById('maxDurationDisplay'),
+        playLoopBtn: document.getElementById('playLoopBtn'),
+        generateBtn: document.getElementById('generateBtn'),
+        progressBar: document.getElementById('progressBar'),
+        progressPercent: document.getElementById('progressPercent'),
+        progressContainer: document.getElementById('progressContainer'),
+        resultList: document.getElementById('resultList'),
+        fpsSelect: document.getElementById('fpsSelect'),
+        qualitySelect: document.getElementById('qualitySelect'), // New
+        playIcon: document.getElementById('playIcon')
+    };
+
+    // --- Config & State ---
+    const CONFIG = {
+        MAX_FRAMES: 60,
+        CROP_SIZE: 300,
+        OUTPUT_SIZE: 112
+    };
+
+    let state = {
+        fps: 20,           
+        maxDuration: 3.0,  
+        scale: 1,
+        posX: 0,
+        posY: 0,
+        videoDuration: 0,
+        startTime: 0,
+        endTime: 3.0,
+        isDraggingCrop: false,
+        dragStartCrop: { x:0, y:0 },
+        isDraggingNav: false,
+        dragStartNav: { x:0, y:0 },
+        isPlayingLoop: false
+    };
+
+    // --- Event Listeners ---
+
+    // 1. File Upload
+    els.videoInput.addEventListener('change', e => loadVideo(e.target.files[0]));
+    
+    // labelへのDnD対応 (dropEffectの設定追加)
+    els.dropZone.addEventListener('dragover', e => { 
+        e.preventDefault(); 
+        e.dataTransfer.dropEffect = 'copy'; // ドロップ可能であることを明示
+        els.dropZone.classList.add('border-[#9146FF]', 'bg-[#27272a]'); 
+    });
+    els.dropZone.addEventListener('dragleave', e => { 
+        els.dropZone.classList.remove('border-[#9146FF]', 'bg-[#27272a]'); 
+    });
+    els.dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        els.dropZone.classList.remove('border-[#9146FF]', 'bg-[#27272a]');
+        if(e.dataTransfer.files[0]) loadVideo(e.dataTransfer.files[0]);
+    });
+
+    function loadVideo(file) {
+        if(!file) return;
+        const url = URL.createObjectURL(file);
+        els.video.src = url;
+        els.navVideo.src = url;
+        
+        els.video.onloadedmetadata = () => {
+            state.videoDuration = els.video.duration;
+            els.uploadArea.classList.add('hidden');
+            els.editorArea.classList.remove('hidden');
+            els.editorArea.classList.add('flex');
+            
+            updateFpsConfig();
+            
+            state.startTime = 0;
+            state.endTime = Math.min(state.videoDuration, state.maxDuration);
+            
+            resetCropPosition();
+            updateTimelineUI();
+            updateTimeDisplay();
+            showToast("Video loaded successfully");
+            setTimeout(updateNavBox, 100);
+        };
+        
+        els.video.addEventListener('timeupdate', () => {
+            if(Math.abs(els.navVideo.currentTime - els.video.currentTime) > 0.2) {
+                els.navVideo.currentTime = els.video.currentTime;
+            }
+            updatePlayhead();
+        });
+    }
+
+    // 2. FPS Change
+    els.fpsSelect.addEventListener('change', () => {
+        updateFpsConfig();
+        const currentDur = state.endTime - state.startTime;
+        if (currentDur > state.maxDuration) {
+            state.endTime = state.startTime + state.maxDuration;
+            if(state.endTime > state.videoDuration) {
+                state.endTime = state.videoDuration;
+                state.startTime = Math.max(0, state.endTime - state.maxDuration);
+            }
+        }
+        updateTimelineUI();
+        updateTimeDisplay();
+    });
+
+    function updateFpsConfig() {
+        state.fps = parseInt(els.fpsSelect.value);
+        state.maxDuration = CONFIG.MAX_FRAMES / state.fps;
+        els.maxDurationDisplay.innerText = `Max ${state.maxDuration.toFixed(1)}s`;
+    }
+
+    // 3. Crop & Zoom (Navigator Dragging Included)
+    function resetCropPosition() {
+        state.scale = 1;
+        els.scaleSlider.value = 1;
+        els.zoomValue.innerText = "1.0x";
+        state.posX = (CONFIG.CROP_SIZE - els.video.videoWidth) / 2;
+        state.posY = (CONFIG.CROP_SIZE - els.video.videoHeight) / 2;
+        updateCropTransform();
+    }
+
+    els.scaleSlider.addEventListener('input', e => {
+        state.scale = parseFloat(e.target.value);
+        updateCropTransform();
+    });
+
+    els.zoomOutBtn.addEventListener('click', () => {
+        let val = parseFloat(els.scaleSlider.value);
+        val = Math.max(0.1, val - 0.1);
+        els.scaleSlider.value = val;
+        els.scaleSlider.dispatchEvent(new Event('input'));
+    });
+
+    els.zoomInBtn.addEventListener('click', () => {
+        let val = parseFloat(els.scaleSlider.value);
+        val = Math.min(5, val + 0.1);
+        els.scaleSlider.value = val;
+        els.scaleSlider.dispatchEvent(new Event('input'));
+    });
+
+    // Main Cropper Drag
+    els.cropContainer.addEventListener('mousedown', e => {
+        state.isDraggingCrop = true;
+        state.dragStartCrop = { x: e.clientX - state.posX, y: e.clientY - state.posY };
+        els.cropContainer.style.cursor = 'grabbing';
+    });
+    
+    // Navigator Drag
+    els.navContainer.addEventListener('mousedown', e => {
+        state.isDraggingNav = true;
+        state.dragStartNav = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => {
+        state.isDraggingCrop = false;
+        state.isDraggingNav = false;
+        els.cropContainer.style.cursor = 'grab';
+        stopTimelineDrag();
+    });
+    
+    window.addEventListener('mousemove', e => {
+        // Crop Drag
+        if(state.isDraggingCrop) {
+            e.preventDefault();
+            state.posX = e.clientX - state.dragStartCrop.x;
+            state.posY = e.clientY - state.dragStartCrop.y;
+            updateCropTransform();
+        }
+        // Nav Drag
+        if(state.isDraggingNav) {
+            e.preventDefault();
+            const dx = e.clientX - state.dragStartNav.x;
+            const dy = e.clientY - state.dragStartNav.y;
+            
+            const navW = els.navVideo.clientWidth;
+            const videoW = els.video.videoWidth;
+            if(navW && videoW) {
+                const ratio = videoW / navW; // Nav上1px = Video上 ratio px
+                // 枠を右に動かす = Videoを左に動かす = posXを減らす
+                state.posX -= dx * ratio;
+                state.posY -= dy * ratio;
+            }
+            
+            state.dragStartNav = { x: e.clientX, y: e.clientY };
+            updateCropTransform();
+        }
+        // Timeline Drag
+        if(timelineDragState.isDragging) {
+            handleTimelineDrag(e);
+        }
+    });
+
+    function updateCropTransform() {
+        els.zoomValue.innerText = state.scale.toFixed(1) + "x";
+        els.video.style.transform = `translate(${state.posX}px, ${state.posY}px) scale(${state.scale})`;
+        updateNavBox();
+    }
+
+    function updateNavBox() {
+        if(!els.video.videoWidth) return;
+        const navW = els.navVideo.clientWidth;
+        const navH = els.navVideo.clientHeight;
+        if(!navW) return;
+
+        const ratioX = navW / els.video.videoWidth;
+        const ratioY = navH / els.video.videoHeight;
+        
+        // 逆算
+        const viewX = -state.posX / state.scale;
+        const viewY = -state.posY / state.scale;
+        const viewW = CONFIG.CROP_SIZE / state.scale;
+        const viewH = CONFIG.CROP_SIZE / state.scale;
+
+        els.navBox.style.left = `${viewX * ratioX}px`;
+        els.navBox.style.top = `${viewY * ratioY}px`;
+        els.navBox.style.width = `${viewW * ratioX}px`;
+        els.navBox.style.height = `${viewH * ratioY}px`;
+    }
+    window.addEventListener('resize', updateNavBox);
+
+    // 4. Timeline
+    let timelineDragState = { isDragging: false, target: null, startX: 0, initialStartPct: 0, initialEndPct: 0 };
+
+    function updateTimelineUI() {
+        if(state.videoDuration <= 0) return;
+        const startPct = (state.startTime / state.videoDuration) * 100;
+        const endPct = (state.endTime / state.videoDuration) * 100;
+        const width = Math.max(endPct - startPct, 0);
+        
+        els.selection.style.left = `${startPct}%`;
+        els.selection.style.width = `${width}%`;
+    }
+
+    els.timeline.addEventListener('mousedown', e => {
+        const target = e.target;
+        if (target.classList.contains('timeline-handle')) {
+            startTimelineDrag(target.dataset.handle, e.clientX);
+        } else if (target.closest('.timeline-selection')) {
+            startTimelineDrag('bar', e.clientX);
+        } else {
+            const rect = els.timeline.getBoundingClientRect();
+            const clickPct = ((e.clientX - rect.left) / rect.width);
+            els.video.currentTime = clickPct * state.videoDuration;
+        }
+    });
+
+    function startTimelineDrag(type, clientX) {
+        timelineDragState.isDragging = true;
+        timelineDragState.target = type;
+        timelineDragState.startX = clientX;
+        timelineDragState.initialStartPct = (state.startTime / state.videoDuration) * 100;
+        timelineDragState.initialEndPct = (state.endTime / state.videoDuration) * 100;
+    }
+    
+    function stopTimelineDrag() {
+        timelineDragState.isDragging = false;
+    }
+
+    function handleTimelineDrag(e) {
+        const rect = els.timeline.getBoundingClientRect();
+        const deltaX = e.clientX - timelineDragState.startX;
+        const deltaPct = (deltaX / rect.width) * 100;
+        const maxPct = (state.maxDuration / state.videoDuration) * 100; 
+
+        let newStart = timelineDragState.initialStartPct;
+        let newEnd = timelineDragState.initialEndPct;
+
+        if (timelineDragState.target === 'left') {
+            newStart += deltaPct;
+            const minAllowed = Math.max(0, newEnd - maxPct);
+            newStart = Math.max(minAllowed, Math.min(newStart, newEnd - 0.5));
+
+        } else if (timelineDragState.target === 'right') {
+            newEnd += deltaPct;
+            const maxAllowed = Math.min(100, newStart + maxPct);
+            newEnd = Math.min(maxAllowed, Math.max(newEnd, newStart + 0.5));
+
+        } else if (timelineDragState.target === 'bar') {
+            const width = newEnd - newStart;
+            newStart += deltaPct;
+            newEnd = newStart + width;
+            if(newStart < 0) { newStart = 0; newEnd = width; }
+            if(newEnd > 100) { newEnd = 100; newStart = 100 - width; }
+        }
+
+        state.startTime = (newStart / 100) * state.videoDuration;
+        state.endTime = (newEnd / 100) * state.videoDuration;
+        
+        updateTimelineUI();
+        updateTimeDisplay();
+        els.video.currentTime = state.startTime;
+    }
+
+    function updateTimeDisplay() {
+        els.timeDisplay.innerText = `${state.startTime.toFixed(1)}s - ${state.endTime.toFixed(1)}s`;
+    }
+
+    function updatePlayhead() {
+        const pct = (els.video.currentTime / state.videoDuration) * 100;
+        els.playhead.style.left = `${pct}%`;
+    }
+
+    // 5. Loop Play
+    els.playLoopBtn.addEventListener('click', togglePlayLoop);
+    function togglePlayLoop() {
+        if (state.isPlayingLoop) {
+            state.isPlayingLoop = false;
+            els.video.pause(); els.navVideo.pause();
+            els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; 
+            els.playLoopBtn.classList.remove('bg-[#9146FF]', 'text-white', 'border-[#9146FF]');
+            els.playLoopBtn.classList.add('bg-[#27272a]', 'text-gray-300', 'border-[#3f3f46]');
+        } else {
+            state.isPlayingLoop = true;
+            els.video.currentTime = state.startTime;
+            els.video.play(); els.navVideo.play();
+            els.playIcon.innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>'; 
+            els.playLoopBtn.classList.remove('bg-[#27272a]', 'text-gray-300', 'border-[#3f3f46]');
+            els.playLoopBtn.classList.add('bg-[#9146FF]', 'text-white', 'border-[#9146FF]');
+            loopCheck();
+        }
+    }
+    function loopCheck() {
+        if (!state.isPlayingLoop) return;
+        if (els.video.currentTime >= state.endTime) {
+            els.video.currentTime = state.startTime;
+        }
+        requestAnimationFrame(loopCheck);
+    }
+
+    // 6. Generate GIF
+    els.generateBtn.addEventListener('click', async () => {
+        if(!workerBlobURL) return showToast("Initializing...");
+        if(state.isPlayingLoop) togglePlayLoop();
+
+        const duration = state.endTime - state.startTime;
+        if(duration <= 0.05) return showToast("Duration too short");
+
+        els.generateBtn.disabled = true;
+        els.progressContainer.classList.remove('hidden');
+        els.progressBar.style.width = '0%';
+        els.progressPercent.innerText = '0%';
+
+        try {
+            const blob = await renderHighQualityGif(CONFIG.OUTPUT_SIZE, duration);
+            addResult(blob);
+            showToast("Stamp Created!", "success");
+        } catch(e) {
+            console.error(e);
+            showToast("Error: " + e.message, "error");
+        } finally {
+            els.generateBtn.disabled = false;
+            els.progressContainer.classList.add('hidden');
+        }
+    });
+
+    function renderHighQualityGif(size, duration) {
+        return new Promise((resolve, reject) => {
+            const quality = parseInt(els.qualitySelect.value); // Get Quality
+            const gif = new GIF({
+                workers: 4,
+                quality: quality, 
+                width: size,
+                height: size,
+                workerScript: workerBlobURL,
+                dither: false
+            });
+
+            const fps = state.fps; 
+            const step = 1 / fps;
+            let currentTime = state.startTime;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            const ratio = 1 / state.scale;
+            const sx = (0 - state.posX) * ratio;
+            const sy = (0 - state.posY) * ratio;
+            const sw = CONFIG.CROP_SIZE * ratio;
+            const sh = CONFIG.CROP_SIZE * ratio;
+
+            const capture = async () => {
+                if(currentTime >= state.endTime || gif.frames.length >= CONFIG.MAX_FRAMES) {
+                    gif.render();
+                    return;
+                }
+                
+                els.video.currentTime = currentTime;
+                await new Promise(r => {
+                    const h = () => { els.video.removeEventListener('seeked', h); r(); };
+                    els.video.addEventListener('seeked', h);
+                });
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0,0, size, size);
+                ctx.drawImage(els.video, sx, sy, sw, sh, 0, 0, size, size);
+                
+                gif.addFrame(ctx, { copy: true, delay: step * 1000 });
+                
+                const pct = ((currentTime - state.startTime) / duration) * 100;
+                els.progressBar.style.width = `${pct}%`;
+                els.progressPercent.innerText = `${Math.round(pct)}%`;
+
+                currentTime += step;
+                setTimeout(capture, 0);
+            };
+
+            gif.on('finished', resolve);
+            gif.on('abort', () => reject(new Error('Aborted')));
+            capture();
+        });
+    }
+
+    function addResult(blob) {
+        if(els.resultList.children.length > 0 && els.resultList.firstElementChild.classList.contains('opacity-20')) {
+            els.resultList.innerHTML = '';
+        }
+        const url = URL.createObjectURL(blob);
+        const kb = (blob.size/1024).toFixed(1);
+        
+        const div = document.createElement('div');
+        div.className = "flex items-center gap-3 bg-[#1f1f23] p-3 rounded-xl border border-[#2f2f35] hover:border-[#3f3f46] transition-all animate-fade-in shadow-sm";
+        div.innerHTML = `
+            <div class="w-16 h-16 bg-[#000] rounded-lg flex items-center justify-center border border-[#3f3f46] shrink-0 overflow-hidden">
+                <img src="${url}" class="w-full h-full object-contain">
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-sm text-gray-200">112px Stamp</div>
+                <div class="text-[10px] text-gray-500 font-mono mt-0.5">${kb} KB</div>
+            </div>
+            <a href="${url}" download="twitch_stamp.gif" class="p-2 bg-[#27272a] hover:bg-[#9146FF] hover:text-white rounded-lg text-gray-400 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </a>
+        `;
+        els.resultList.insertBefore(div, els.resultList.firstChild);
+    }
+
+    function showToast(msg, type='normal') {
+        const t = document.getElementById('toast');
+        const icon = type === 'success' ? 
+            '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
+            '<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        
+        t.innerHTML = `${icon}<span>${msg}</span>`;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+</script>
+</body>
+</html>
