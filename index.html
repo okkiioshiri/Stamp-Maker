@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Oshiri Stamp Maker Pro</title>
+<title>Oshiri Stamp Maker Pro v5.6 (Integrated Progress)</title>
 <!-- 
   License Information:
   - gif.js: MIT License (https://github.com/jnordberg/gif.js)
@@ -285,7 +285,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
         <svg class="w-5 h-5" style="color: var(--theme-color)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 13v3c0 4-8 5-9 0-1-6 4-12 9-12s10 6 9 12c-1 5-9 4-9 0" />
         </svg>
-        Stamp Maker <span class="text-[10px] bg-[#2d2d31] text-gray-400 px-1.5 py-0.5 rounded ml-1 border border-[#3f3f46]">PRO v5.4</span>
+        Stamp Maker <span class="text-[10px] bg-[#2d2d31] text-gray-400 px-1.5 py-0.5 rounded ml-1 border border-[#3f3f46]">PRO v5.6</span>
     </h1>
     
     <div class="flex items-center gap-4">
@@ -320,8 +320,8 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
     <!-- LEFT COLUMN: Navigator + Timeline + Settings -->
     <div class="flex-1 flex flex-col min-w-0">
         
-        <!-- Navigator Header -->
-        <div class="h-8 shrink-0 border-b border-[#27272a] bg-[#1f1f23] flex items-center px-2 justify-between">
+        <!-- Navigator Header (Color Fixed) -->
+        <div class="h-8 shrink-0 border-b border-[#27272a] bg-[#18181b] flex items-center px-2 justify-between">
             <div class="flex items-center gap-2">
                 <svg class="w-3.5 h-3.5" style="color: var(--theme-color)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 <span class="text-[10px] font-bold text-gray-400">NAVIGATOR</span>
@@ -385,7 +385,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
                 
                 <!-- Col 1: Output Settings -->
                 <div class="flex flex-col h-full gap-1">
-                    <div class="flex items-center justify-between mb-0.5">
+                    <div class="flex items-center justify-between mb-0.5 h-6">
                         <div class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5" style="color: var(--theme-color)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                             <span class="text-[10px] font-bold text-gray-400">OUTPUT</span>
@@ -478,7 +478,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 
                 <!-- Col 2: Image Adjustment -->
                 <div class="flex flex-col h-full gap-1">
-                    <div class="flex items-center justify-between mb-0.5">
+                    <div class="flex items-center justify-between mb-0.5 h-6">
                         <div class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5" style="color: var(--theme-color)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                             <span class="text-[10px] font-bold text-gray-400">ADJUSTMENT</span>
@@ -539,7 +539,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 
                 <!-- Col 3: Text Settings -->
                 <div class="flex flex-col h-full gap-1">
-                    <div class="flex items-center justify-between mb-0.5">
+                    <div class="flex items-center justify-between mb-0.5 h-6">
                         <div class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5" style="color: var(--theme-color)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7V4h16v3M9 20h6M12 4v16" />
@@ -638,12 +638,17 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
             <button id="playLoopBtn" class="w-full bg-[#27272a] hover:bg-[#333] text-white text-xs font-bold py-2.5 rounded border border-[#3f3f46] flex items-center justify-center gap-2 transition-colors" data-help="生成前にループアニメーションを確認">
                 <svg id="playIcon" class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> PREVIEW LOOP
             </button>
-            <button id="generateBtn" class="unlock-on-busy w-full text-xs font-bold py-2.5 rounded shadow-lg flex items-center justify-center gap-2 transition-colors" style="background-color: var(--theme-color); color: var(--theme-text-color);" data-help="GIFスタンプを生成してダウンロード">
-                CREATE STAMP
+            
+            <!-- Modified Generate Button (Progress Integrated) -->
+            <button id="generateBtn" class="unlock-on-busy relative overflow-hidden w-full text-xs font-bold py-2.5 rounded shadow-lg flex items-center justify-center transition-colors" style="background-color: var(--theme-color); color: var(--theme-text-color);" data-help="GIFスタンプを生成してダウンロード">
+                <!-- Progress Bar Layer -->
+                <div id="btnProgress" class="absolute top-0 left-0 h-full transition-all duration-100 pointer-events-none" style="width: 0%; background-color: rgba(255,255,255,0.2);"></div>
+                
+                <!-- Text Layer -->
+                <span id="generateBtnText" class="relative z-10 flex items-center gap-2">
+                    CREATE STAMP
+                </span>
             </button>
-            <div id="progressContainer" class="hidden h-1.5 bg-[#0e0e10] rounded-full overflow-hidden">
-                <div id="progressBar" class="h-full w-0 transition-all duration-300" style="background-color: var(--theme-color)"></div>
-            </div>
         </div>
     </div>
 </div>
@@ -831,8 +836,8 @@ textCenterBtn: document.getElementById('textCenterBtn'),
 playLoopBtn: document.getElementById('playLoopBtn'),
 playIcon: document.getElementById('playIcon'),
 generateBtn: document.getElementById('generateBtn'),
-progressContainer: document.getElementById('progressContainer'),
-progressBar: document.getElementById('progressBar'),
+generateBtnText: document.getElementById('generateBtnText'),
+btnProgress: document.getElementById('btnProgress'),
 resultList: document.getElementById('resultList'),
 clearHistoryBtn: document.getElementById('clearHistoryBtn'),
 modeBadge: document.getElementById('modeBadge'),
@@ -1677,6 +1682,7 @@ else b.classList.remove('active');
 if (!state.isGenerating) {
 els.generateBtn.style.backgroundColor = config.color;
 els.generateBtn.style.color = config.textColor;
+if(els.btnProgress) els.btnProgress.style.backgroundColor = 'rgba(255,255,255,0.2)';
 }
 
 updatePlatformUI();
@@ -2635,10 +2641,14 @@ els.generateBtn.addEventListener('click', () => {
     if (stampGenerator.isGenerating) {
         stampGenerator.cancel();
         toggleUILock(false);
-        els.generateBtn.innerText = "CREATE STAMP";
-        els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-        els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-        els.progressContainer.classList.add('hidden');
+        
+        // Reset Button Style
+        const config = APP_CONFIG.PLATFORMS[state.platformMode];
+        els.generateBtnText.innerText = "CREATE STAMP";
+        els.generateBtn.style.backgroundColor = config.color;
+        els.generateBtn.style.color = config.textColor;
+        els.btnProgress.style.width = '0%';
+        
         showToast("キャンセルされました");
         return;
     }
@@ -2648,26 +2658,34 @@ els.generateBtn.addEventListener('click', () => {
     if(state.isPlayingLoop) togglePlayLoop();
     clearQualityPreview();
 
-    // UI Updates
+    // UI Updates (Start Progress)
     toggleUILock(true);
-    els.generateBtn.innerText = "CANCEL";
-    els.generateBtn.style.backgroundColor = '#dc2626';
+    els.generateBtnText.innerText = "CANCEL (0%)";
+    
+    // ボタン背景を暗くし、プログレスバーをテーマカラーにする
+    els.generateBtn.style.backgroundColor = '#27272a'; // Dark Gray Background
     els.generateBtn.style.color = '#ffffff';
-    els.progressContainer.classList.remove('hidden');
+    els.btnProgress.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color; // Theme Color Progress
+    els.btnProgress.style.width = '0%';
 
     // Start Generation
     stampGenerator.start(
         // Progress
         (pct) => {
-            els.progressBar.style.width = (pct * 100) + '%';
+            const percent = Math.round(pct * 100);
+            els.btnProgress.style.width = percent + '%';
+            els.generateBtnText.innerText = `CANCEL (${percent}%)`;
         },
         // Complete
         (blob, dims) => {
             toggleUILock(false);
-            els.generateBtn.innerText = "CREATE STAMP";
-            els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-            els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-            els.progressContainer.classList.add('hidden');
+            
+            // Reset Button Style
+            const config = APP_CONFIG.PLATFORMS[state.platformMode];
+            els.generateBtnText.innerText = "CREATE STAMP";
+            els.generateBtn.style.backgroundColor = config.color;
+            els.generateBtn.style.color = config.textColor;
+            els.btnProgress.style.width = '0%';
             
             handleGenerationSuccess(blob, dims);
         },
@@ -2675,10 +2693,14 @@ els.generateBtn.addEventListener('click', () => {
         (err) => {
             console.error(err);
             toggleUILock(false);
-            els.generateBtn.innerText = "CREATE STAMP";
-            els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-            els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-            els.progressContainer.classList.add('hidden');
+            
+            // Reset Button Style
+            const config = APP_CONFIG.PLATFORMS[state.platformMode];
+            els.generateBtnText.innerText = "CREATE STAMP";
+            els.generateBtn.style.backgroundColor = config.color;
+            els.generateBtn.style.color = config.textColor;
+            els.btnProgress.style.width = '0%';
+            
             showToast("エラーが発生しました", true);
         }
     );
