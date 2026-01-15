@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Oshiri Stamp Maker Pro v5.3 (Stable & Localized)</title>
+<title>Oshiri Stamp Maker Pro v5.4 (Refactored & Stable)</title>
 <!-- 
   License Information:
   - gif.js: MIT License (https://github.com/jnordberg/gif.js)
@@ -285,7 +285,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
         <svg class="w-5 h-5" style="color: var(--theme-color)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 13v3c0 4-8 5-9 0-1-6 4-12 9-12s10 6 9 12c-1 5-9 4-9 0" />
         </svg>
-        Stamp Maker <span class="text-[10px] bg-[#2d2d31] text-gray-400 px-1.5 py-0.5 rounded ml-1 border border-[#3f3f46]">PRO v5.3</span>
+        Stamp Maker <span class="text-[10px] bg-[#2d2d31] text-gray-400 px-1.5 py-0.5 rounded ml-1 border border-[#3f3f46]">PRO v5.4</span>
     </h1>
     
     <div class="flex items-center gap-4">
@@ -2387,94 +2387,94 @@ els.timelineSelection.style.left = `${startPct}%`; els.timelineSelection.style.w
 els.timeDisplay.innerText = `${state.startTime.toFixed(1)}s - ${state.endTime.toFixed(1)}s`;
 }
 
-// --- Generator Logic ---
+// --- Generator Logic (Refactored & Class-Based) ---
 function getOutputDimensions() {
-if (state.useOriginalSize && state.platformMode === 'free') {
-return { width: Math.round(state.cropW), height: Math.round(state.cropH) };
-}
-let inputSize = parseInt(els.sizeInput.value) || 112;
+    if (state.useOriginalSize && state.platformMode === 'free') {
+        return { width: Math.round(state.cropW), height: Math.round(state.cropH) };
+    }
+    let inputSize = parseInt(els.sizeInput.value) || 112;
 
-if (state.platformMode !== 'free') {
-const max = APP_CONFIG.PLATFORMS[state.platformMode].maxSize;
-if (inputSize > max) inputSize = max;
-}
+    if (state.platformMode !== 'free') {
+        const max = APP_CONFIG.PLATFORMS[state.platformMode].maxSize;
+        if (inputSize > max) inputSize = max;
+    }
 
-if (state.platformMode !== 'free' || !state.freeAspect) {
-return { width: inputSize, height: inputSize };
-} else {
-const ratio = state.cropW / state.cropH;
-let w, h;
-if (ratio >= 1) {
-w = inputSize; h = Math.round(inputSize / ratio);
-} else {
-w = Math.round(inputSize * ratio); h = inputSize;
-}
-return { width: Math.max(1, w), height: Math.max(1, h) };
-}
+    if (state.platformMode !== 'free' || !state.freeAspect) {
+        return { width: inputSize, height: inputSize };
+    } else {
+        const ratio = state.cropW / state.cropH;
+        let w, h;
+        if (ratio >= 1) {
+            w = inputSize; h = Math.round(inputSize / ratio);
+        } else {
+            w = Math.round(inputSize * ratio); h = inputSize;
+        }
+        return { width: Math.max(1, w), height: Math.max(1, h) };
+    }
 }
 
 els.qualitySelect.addEventListener('change', () => previewController.update());
 
 function clearQualityPreview() {
-previewController.clear();
+    previewController.clear();
 }
 els.navContainer.addEventListener('mousedown', clearQualityPreview);
 els.navContainer.addEventListener('touchstart', clearQualityPreview, {passive: true});
 
 els.playLoopBtn.addEventListener('click', togglePlayLoop);
 function togglePlayLoop() {
-if (state.isPlayingLoop) {
-state.isPlayingLoop = false; cancelAnimationFrame(state.animationFrameId);
-if(state.mode === 'video') { els.sourceVideo.pause(); els.navVideo.pause(); }
-els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; els.playLoopBtn.classList.replace('bg-[#9146FF]', 'bg-[#27272a]');
-els.playLoopBtn.style.backgroundColor = '';
-els.playLoopBtn.style.color = '';
-els.playLoopBtn.classList.add('text-white');
-setTimeout(() => previewController.update(), 50);
-} else {
-clearQualityPreview(); state.isPlayingLoop = true;
-els.playIcon.innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>'; 
-els.playLoopBtn.classList.remove('bg-[#27272a]');
-els.playLoopBtn.style.backgroundColor = 'var(--theme-color)';
-els.playLoopBtn.style.color = 'var(--theme-text-color)';
-els.playLoopBtn.classList.remove('text-white');
-if(state.mode === 'video') {
-els.sourceVideo.currentTime = state.startTime; els.sourceVideo.play();
-els.navVideo.currentTime = state.startTime; els.navVideo.play();
-loopVideo();
-}
-else { state.loopStartTime = null; loopImage(); }
-}
+    if (state.isPlayingLoop) {
+        state.isPlayingLoop = false; cancelAnimationFrame(state.animationFrameId);
+        if(state.mode === 'video') { els.sourceVideo.pause(); els.navVideo.pause(); }
+        els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; els.playLoopBtn.classList.replace('bg-[#9146FF]', 'bg-[#27272a]');
+        els.playLoopBtn.style.backgroundColor = '';
+        els.playLoopBtn.style.color = '';
+        els.playLoopBtn.classList.add('text-white');
+        setTimeout(() => previewController.update(), 50);
+    } else {
+        clearQualityPreview(); state.isPlayingLoop = true;
+        els.playIcon.innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>'; 
+        els.playLoopBtn.classList.remove('bg-[#27272a]');
+        els.playLoopBtn.style.backgroundColor = 'var(--theme-color)';
+        els.playLoopBtn.style.color = 'var(--theme-text-color)';
+        els.playLoopBtn.classList.remove('text-white');
+        if(state.mode === 'video') {
+            els.sourceVideo.currentTime = state.startTime; els.sourceVideo.play();
+            els.navVideo.currentTime = state.startTime; els.navVideo.play();
+            loopVideo();
+        }
+        else { state.loopStartTime = null; loopImage(); }
+    }
 }
 function loopVideo() {
-if(!state.isPlayingLoop) return;
-if(els.sourceVideo.currentTime >= state.endTime) {
-els.sourceVideo.currentTime = state.startTime;
-els.navVideo.currentTime = state.startTime;
-}
-if(Math.abs(els.navVideo.currentTime - els.sourceVideo.currentTime) > 0.2) {
-els.navVideo.currentTime = els.sourceVideo.currentTime;
-}
-const pct = (els.sourceVideo.currentTime / state.videoDuration) * 100;
-els.playhead.style.left = `${pct}%`;
-requestAnimationFrame(loopVideo);
+    if(!state.isPlayingLoop) return;
+    if(els.sourceVideo.currentTime >= state.endTime) {
+        els.sourceVideo.currentTime = state.startTime;
+        els.navVideo.currentTime = state.startTime;
+    }
+    if(Math.abs(els.navVideo.currentTime - els.sourceVideo.currentTime) > 0.2) {
+        els.navVideo.currentTime = els.sourceVideo.currentTime;
+    }
+    const pct = (els.sourceVideo.currentTime / state.videoDuration) * 100;
+    els.playhead.style.left = `${pct}%`;
+    requestAnimationFrame(loopVideo);
 }
 function loopImage(timestamp) {
-if(!state.isPlayingLoop) return;
-if(!timestamp) timestamp = performance.now();
-if(!state.loopStartTime) state.loopStartTime = timestamp;
+    if(!state.isPlayingLoop) return;
+    if(!timestamp) timestamp = performance.now();
+    if(!state.loopStartTime) state.loopStartTime = timestamp;
 
-const elapsed = timestamp - state.loopStartTime;
-const frameDuration = 1000 / state.fps;
-let currentFrame = Math.floor(elapsed / frameDuration) % state.totalFrames;
-let index = Math.floor(currentFrame * (state.images.length / state.totalFrames));
-index = Math.min(index, state.images.length - 1);
+    const elapsed = timestamp - state.loopStartTime;
+    const frameDuration = 1000 / state.fps;
+    let currentFrame = Math.floor(elapsed / frameDuration) % state.totalFrames;
+    let index = Math.floor(currentFrame * (state.images.length / state.totalFrames));
+    index = Math.min(index, state.images.length - 1);
 
-if(state.images[index]) {
-els.sourceImage.src = state.images[index].url;
-els.navImage.src = state.images[index].url;
-}
-state.animationFrameId = requestAnimationFrame(loopImage);
+    if(state.images[index]) {
+        els.sourceImage.src = state.images[index].url;
+        els.navImage.src = state.images[index].url;
+    }
+    state.animationFrameId = requestAnimationFrame(loopImage);
 }
 
 // UI Locking Helper
@@ -2492,209 +2492,245 @@ function toggleUILock(isLocked) {
             else el.classList.remove('ui-locked');
         }
     });
-    // Generate button remains unlocked for cancel
 }
 
-els.generateBtn.addEventListener('click', async () => {
-if (state.isGenerating) {
-if (state.abortController) state.abortController.abort();
-state.isGenerating = false;
-toggleUILock(false); // Unlock UI
-els.generateBtn.innerText = "CREATE STAMP";
-els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-els.progressContainer.classList.add('hidden');
-showToast("キャンセルされました");
-return;
-}
+// --- Stamp Generator Object ---
+const stampGenerator = {
+    abortController: null,
+    isGenerating: false,
 
-if(!workerBlobURL) return showToast("初期化中...");
-if(state.isPlayingLoop) togglePlayLoop();
-clearQualityPreview();
+    async start(onProgress, onComplete, onError) {
+        if (this.isGenerating) {
+            this.cancel();
+            return;
+        }
 
-state.isGenerating = true;
-toggleUILock(true); // Lock UI
-state.abortController = new AbortController();
-const signal = state.abortController.signal;
+        this.isGenerating = true;
+        this.abortController = new AbortController();
+        const signal = this.abortController.signal;
 
-els.generateBtn.innerText = "CANCEL";
-els.generateBtn.style.backgroundColor = '#dc2626';
-els.generateBtn.style.color = '#ffffff';
-els.progressContainer.classList.remove('hidden');
+        try {
+            const dims = getOutputDimensions();
+            const quality = parseInt(els.qualitySelect.value);
 
-try {
-const quality = parseInt(els.qualitySelect.value);
-const dims = getOutputDimensions();
+            const gif = new GIF({
+                workers: APP_CONFIG.WORKER_COUNT,
+                quality: quality,
+                width: dims.width,
+                height: dims.height,
+                workerScript: workerBlobURL,
+                dither: state.dither,
+                transparent: state.chromaKey.enabled ? APP_CONFIG.MAGIC_PINK : null
+            });
 
-const gif = new GIF({
-workers: APP_CONFIG.WORKER_COUNT,
-quality: quality,
-width: dims.width,
-height: dims.height,
-workerScript: workerBlobURL,
-dither: state.dither,
-transparent: state.chromaKey.enabled ? APP_CONFIG.MAGIC_PINK : null
-});
+            const canvas = document.createElement('canvas'); 
+            canvas.width = dims.width; canvas.height = dims.height;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+            
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            const filters = `brightness(${state.filters.brightness}%) contrast(${state.filters.contrast}%) saturate(${state.filters.saturate}%)`;
+            ctx.filter = filters;
 
-const canvas = document.createElement('canvas'); canvas.width = dims.width; canvas.height = dims.height;
-const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-ctx.filter = `brightness(${state.filters.brightness}%) contrast(${state.filters.contrast}%) saturate(${state.filters.saturate}%)`;
+            const draw = (source) => {
+                ctx.clearRect(0, 0, dims.width, dims.height);
+                if (state.chromaKey.enabled) {
+                    const hex = '#' + APP_CONFIG.MAGIC_PINK.toString(16).padStart(6, '0');
+                    ctx.fillStyle = hex;
+                } else {
+                    ctx.fillStyle = '#000';
+                }
+                ctx.fillRect(0, 0, dims.width, dims.height);
+                
+                const sx = state.posX; const sy = state.posY; 
+                const sw = state.cropW; const sh = state.cropH;
+                ctx.drawImage(source, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
+                
+                if (state.chromaKey.enabled) {
+                    applyChromaKey(ctx, dims.width, dims.height, state.chromaKey.color, state.chromaKey.threshold, state.chromaKey.smoothness, true);
+                }
+                
+                ctx.filter = 'none';
+                drawTextOverlay(ctx, dims.width, dims.height);
+                ctx.filter = filters;
+            };
 
-const sx = state.posX; const sy = state.posY; const sw = state.cropW; const sh = state.cropH;
+            if(state.mode === 'video') {
+                const step = 1 / state.fps; 
+                const duration = state.endTime - state.startTime;
+                let t = state.startTime;
+                let frameCount = 0;
 
-const drawFrame = (source) => {
-ctx.clearRect(0, 0, dims.width, dims.height);
-if (state.chromaKey.enabled) {
-const hex = '#' + APP_CONFIG.MAGIC_PINK.toString(16).padStart(6, '0');
-ctx.fillStyle = hex;
-} else {
-ctx.fillStyle = '#000';
-}
-ctx.fillRect(0, 0, dims.width, dims.height);
+                const processVideoFrame = async () => {
+                    if (signal.aborted) return;
+                    if(t >= state.endTime || frameCount >= state.totalFrames) {
+                        gif.render(); return;
+                    }
 
-ctx.drawImage(source, sx, sy, sw, sh, 0, 0, dims.width, dims.height);
+                    els.sourceVideo.currentTime = t;
+                    try {
+                        await new Promise(r => {
+                            const h = () => { els.sourceVideo.removeEventListener('seeked', h); r(); };
+                            els.sourceVideo.addEventListener('seeked', h);
+                            setTimeout(h, 1000);
+                        });
+                    } catch(e){}
 
-if (state.chromaKey.enabled) {
-applyChromaKey(ctx, dims.width, dims.height, state.chromaKey.color, state.chromaKey.threshold, state.chromaKey.smoothness, true);
-}
+                    if (signal.aborted) return;
+                    draw(els.sourceVideo);
+                    gif.addFrame(ctx, { copy: true, delay: step * 1000 });
+                    
+                    if(onProgress) onProgress((t - state.startTime) / duration);
+                    t += step; frameCount++;
+                    setTimeout(processVideoFrame, 0);
+                };
+                processVideoFrame();
+            } else {
+                const delay = 1000 / state.fps;
+                let frameIndices = [];
+                for(let i=0; i<state.totalFrames; i++) frameIndices.push(i);
+                if (state.pingPong && state.totalFrames > 2) {
+                    for (let i = state.totalFrames - 2; i > 0; i--) frameIndices.push(i);
+                }
 
-ctx.filter = 'none';
-drawTextOverlay(ctx, dims.width, dims.height);
-ctx.filter = `brightness(${state.filters.brightness}%) contrast(${state.filters.contrast}%) saturate(${state.filters.saturate}%)`;
+                for(let i=0; i<frameIndices.length; i++) {
+                    if (signal.aborted) break;
+                    let logicalIdx = frameIndices[i];
+                    let imgIdx = Math.floor(logicalIdx * (state.images.length / state.totalFrames));
+                    imgIdx = Math.min(imgIdx, state.images.length-1);
+                    
+                    const img = new Image(); img.src = state.images[imgIdx].url;
+                    await new Promise(r => img.onload = r);
+                    
+                    draw(img);
+                    gif.addFrame(ctx, { copy: true, delay: delay });
+                    if(onProgress) onProgress(i / frameIndices.length);
+                }
+                if (!signal.aborted) gif.render();
+            }
+
+            gif.on('finished', blob => {
+                if (!signal.aborted) onComplete(blob, dims);
+                this.isGenerating = false;
+                this.abortController = null;
+            });
+
+        } catch(e) {
+            if(onError) onError(e);
+            this.isGenerating = false;
+            this.abortController = null;
+        }
+    },
+
+    cancel() {
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
+        }
+        this.isGenerating = false;
+    }
 };
 
-if(state.mode === 'video') {
-const step = 1 / state.fps; const duration = state.endTime - state.startTime;
-let t = state.startTime;
-let frameCount = 0;
+els.generateBtn.addEventListener('click', () => {
+    // 1. Cancel Action
+    if (stampGenerator.isGenerating) {
+        stampGenerator.cancel();
+        toggleUILock(false);
+        els.generateBtn.innerText = "CREATE STAMP";
+        els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
+        els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
+        els.progressContainer.classList.add('hidden');
+        showToast("キャンセルされました");
+        return;
+    }
 
-const process = async () => {
-if (signal.aborted) return;
+    // 2. Start Action
+    if(!workerBlobURL) return showToast("初期化中...");
+    if(state.isPlayingLoop) togglePlayLoop();
+    clearQualityPreview();
 
-if(t >= state.endTime || frameCount >= state.totalFrames) {
-gif.render(); return;
-}
+    // UI Updates
+    toggleUILock(true);
+    els.generateBtn.innerText = "CANCEL";
+    els.generateBtn.style.backgroundColor = '#dc2626';
+    els.generateBtn.style.color = '#ffffff';
+    els.progressContainer.classList.remove('hidden');
 
-els.sourceVideo.currentTime = t;
-
-try {
-await new Promise((resolve) => {
-const onSeeked = () => {
-els.sourceVideo.removeEventListener('seeked', onSeeked);
-resolve();
-};
-els.sourceVideo.addEventListener('seeked', onSeeked);
-setTimeout(() => { els.sourceVideo.removeEventListener('seeked', onSeeked); resolve(); }, 1000);
+    // Start Generation
+    stampGenerator.start(
+        // Progress
+        (pct) => {
+            els.progressBar.style.width = (pct * 100) + '%';
+        },
+        // Complete
+        (blob, dims) => {
+            toggleUILock(false);
+            els.generateBtn.innerText = "CREATE STAMP";
+            els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
+            els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
+            els.progressContainer.classList.add('hidden');
+            
+            handleGenerationSuccess(blob, dims);
+        },
+        // Error
+        (err) => {
+            console.error(err);
+            toggleUILock(false);
+            els.generateBtn.innerText = "CREATE STAMP";
+            els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
+            els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
+            els.progressContainer.classList.add('hidden');
+            showToast("エラーが発生しました", true);
+        }
+    );
 });
-} catch(e) {}
 
-if (signal.aborted) return;
+function handleGenerationSuccess(blob, dims) {
+    const url = resourceManager.createURL(blob);
+    const sizeMB = blob.size / (1024 * 1024);
+    const isOverSize = sizeMB > APP_CONFIG.MAX_FILE_SIZE_MB;
+    const sizeText = (blob.size / 1024).toFixed(1) + 'KB';
+    const sizeClass = isOverSize ? 'text-red-500 font-bold' : 'text-gray-500';
+    const btnStyle = isOverSize ? 'background-color: #dc2626; color: #fff;' : `background-color: ${APP_CONFIG.PLATFORMS[state.platformMode].color}; color: ${APP_CONFIG.PLATFORMS[state.platformMode].textColor};`;
+    const btnText = isOverSize ? `OVER ${APP_CONFIG.MAX_FILE_SIZE_MB}MB` : 'DL';
 
-drawFrame(els.sourceVideo);
-gif.addFrame(ctx, { copy: true, delay: step * 1000 });
+    const div = document.createElement('div');
+    div.className = "flex items-center gap-3 bg-[#1f1f23] p-2 rounded-lg border border-[#333] mb-2 group relative";
 
-els.progressBar.style.width = ((t-state.startTime)/duration*100)+'%';
-t += step; frameCount++;
-setTimeout(process, 0);
-};
-process();
-} else {
-const delay = 1000 / state.fps;
-let frameIndices = [];
-for(let i=0; i<state.totalFrames; i++) frameIndices.push(i);
+    const delBtn = document.createElement('button');
+    delBtn.className = "absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md";
+    delBtn.innerHTML = "×";
+    delBtn.onclick = () => {
+        resourceManager.revoke(url);
+        div.remove();
+        if(els.resultList.children.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.id = "noStampsMsg";
+            emptyMsg.className = "text-center mt-10 text-[10px] text-gray-600";
+            emptyMsg.innerText = "No stamps";
+            els.resultList.appendChild(emptyMsg);
+        }
+    };
 
-if (state.pingPong && state.totalFrames > 2) {
-for (let i = state.totalFrames - 2; i > 0; i--) {
-frameIndices.push(i);
+    div.innerHTML = `
+    <img src="${url}" class="w-10 h-10 rounded bg-black/50">
+    <div class="flex-1 min-w-0">
+    <div class="text-xs font-bold text-white">Stamp (${dims.width}x${dims.height})</div>
+    <div class="text-[10px] ${sizeClass}">${sizeText}</div>
+    </div>
+    <a href="${url}" download="stamp.gif" class="text-xs px-2 py-1 rounded text-center min-w-[50px] hover:brightness-110" style="${btnStyle}">${btnText}</a>
+    `;
+    div.appendChild(delBtn);
+
+    if (els.qualityPreviewImage.src) resourceManager.revoke(els.qualityPreviewImage.src);
+
+    const noMsg = document.getElementById('noStampsMsg');
+    if (noMsg) noMsg.remove();
+
+    els.resultList.insertBefore(div, els.resultList.firstChild);
+
+    if(isOverSize) showToast(`注意: ファイルサイズが ${APP_CONFIG.MAX_FILE_SIZE_MB}MB を超えています`, true);
+    else showToast("生成完了!");
 }
-}
-
-for(let i=0; i<frameIndices.length; i++) {
-if (signal.aborted) break;
-
-let logicalIdx = frameIndices[i];
-let imgIdx = Math.floor(logicalIdx * (state.images.length / state.totalFrames));
-imgIdx = Math.min(imgIdx, state.images.length-1);
-
-const img = new Image(); img.src = state.images[imgIdx].url;
-await new Promise(r => img.onload = r);
-
-drawFrame(img);
-gif.addFrame(ctx, { copy: true, delay: delay });
-els.progressBar.style.width = ((i/frameIndices.length)*100)+'%';
-}
-if (!signal.aborted) gif.render();
-}
-
-gif.on('finished', blob => {
-if (signal.aborted) return;
-
-state.isGenerating = false;
-toggleUILock(false); // Unlock UI
-els.generateBtn.innerText = "CREATE STAMP";
-els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-els.progressContainer.classList.add('hidden');
-
-const url = resourceManager.createURL(blob);
-
-const sizeMB = blob.size / (1024 * 1024);
-const isOverSize = sizeMB > APP_CONFIG.MAX_FILE_SIZE_MB;
-const sizeText = (blob.size / 1024).toFixed(1) + 'KB';
-const sizeClass = isOverSize ? 'text-red-500 font-bold' : 'text-gray-500';
-const btnStyle = isOverSize ? 'background-color: #dc2626; color: #fff;' : `background-color: ${APP_CONFIG.PLATFORMS[state.platformMode].color}; color: ${APP_CONFIG.PLATFORMS[state.platformMode].textColor};`;
-const btnText = isOverSize ? `OVER ${APP_CONFIG.MAX_FILE_SIZE_MB}MB` : 'DL';
-
-const div = document.createElement('div');
-div.className = "flex items-center gap-3 bg-[#1f1f23] p-2 rounded-lg border border-[#333] mb-2 group relative";
-
-const delBtn = document.createElement('button');
-delBtn.className = "absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md";
-delBtn.innerHTML = "×";
-delBtn.onclick = () => {
-resourceManager.revoke(url);
-div.remove();
-if(els.resultList.children.length === 0) {
-const emptyMsg = document.createElement('div');
-emptyMsg.id = "noStampsMsg";
-emptyMsg.className = "text-center mt-10 text-[10px] text-gray-600";
-emptyMsg.innerText = "No stamps";
-els.resultList.appendChild(emptyMsg);
-}
-};
-
-div.innerHTML = `
-<img src="${url}" class="w-10 h-10 rounded bg-black/50">
-<div class="flex-1 min-w-0">
-<div class="text-xs font-bold text-white">Stamp (${dims.width}x${dims.height})</div>
-<div class="text-[10px] ${sizeClass}">${sizeText}</div>
-</div>
-<a href="${url}" download="stamp.gif" class="text-xs px-2 py-1 rounded text-center min-w-[50px] hover:brightness-110" style="${btnStyle}">${btnText}</a>
-`;
-div.appendChild(delBtn);
-
-if (els.qualityPreviewImage.src) resourceManager.revoke(els.qualityPreviewImage.src);
-
-const noMsg = document.getElementById('noStampsMsg');
-if (noMsg) noMsg.remove();
-
-els.resultList.insertBefore(div, els.resultList.firstChild);
-
-if(isOverSize) showToast(`注意: ファイルサイズが ${APP_CONFIG.MAX_FILE_SIZE_MB}MB を超えています`, true);
-else showToast("生成完了!");
-});
-} catch(e) {
-console.error(e);
-state.isGenerating = false;
-toggleUILock(false); // Unlock UI
-els.generateBtn.innerText = "CREATE STAMP";
-els.generateBtn.style.backgroundColor = APP_CONFIG.PLATFORMS[state.platformMode].color;
-els.generateBtn.style.color = APP_CONFIG.PLATFORMS[state.platformMode].textColor;
-els.progressContainer.classList.add('hidden');
-showToast("エラーが発生しました", true);
-}
-});
 
 function showToast(msg, isError = false) {
 const t = document.getElementById('toast'); 
